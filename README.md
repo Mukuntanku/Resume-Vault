@@ -33,13 +33,9 @@ Resume Vault is a web application that allows users to securely upload, manage, 
 
 Welcome contributions from the community. Feel free to open issues, submit pull requests, or provide suggestions for improvements.
 
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## Author
 
-- [Your Name](https://github.com/yourusername)
+- [Mukuntan K U](https://github.com/Mukuntanku)
 
 ## Acknowledgments
 
