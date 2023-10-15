@@ -21,7 +21,7 @@ app.use(cookieParser());
 app.use(cors());
 
 // jwt seceret key
-const secretKey = 'OoMMGQsMs4aOyCvgv09voLmo';
+const secretKey = 'strong_seceret_key';
 
 // Initialize Google Cloud Storage client
 const storage = new Storage({ keyFilename: 'cloudcomputing-397915-a1ee532785f2.json' });
