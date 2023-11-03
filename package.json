@@ -2,9 +2,13 @@
   "name": "nodecli",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "private": true,
+  "main": "server_mongodb.js",
   "scripts": {
-    "start": "nodemon server_mongodb.js"
+    "start": "node server_mongodb.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   },
   "keywords": [],
   "author": "",
