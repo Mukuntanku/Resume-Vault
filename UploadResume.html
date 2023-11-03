@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+    <title>Resume</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>Welcome, <span id="userName"></span></h2>
+                <span id="userEmail"></span>
+            </div>
+            <div>
+                <button type="button" class="btn btn-primary" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+        <hr>
+        <h4>Upload Resume</h4>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="resumeName">Resume Name:</label>
+                <input type="text" class="form-control" id="resumeName" name="resumeName" placeholder="Enter a custom name for the file" required>
+            </div>
+
+            <div class="form-group">
+                <label for="resumeFile">Choose a Resume File:</label>
+                <input type="file" class="form-control-file" id="resumeFile" name="resumeFile" required accept=".pdf, .doc, .docx, .xls, .xlsx">
+                <small class="form-text text-muted">Supported file types: PDF, Word, Excel, etc.</small>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="handleUpload()">Upload Resume</button>
+        </form>
+        <hr>
+        <h4>Uploaded Resumes</h4>
+        <div id="fileListContainer" class="mt-3">
+            <!-- Files will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch and display user details from the server
+        fetch('/getUserDetails')
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const user = data.user;
+                    document.getElementById('userName').textContent = user.firstName + ' ' + user.lastName;
+                    document.getElementById('userEmail').textContent = user.email;
+                    listUserFiles();
+                } else {
+                    // Handle authentication error
+                    console.error('Error:', error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+
+        // Function to handle logout
+        function handleLogout() {
+            // Send a GET request to the server to log the user out
+            fetch('/logout')
+                .then(response => {
+                    if (response.redirected) {
+                        // Redirect to the login page
+                        window.location.href = response.url;
+                    } else {
+                        // Handle errors or other responses
+                        alert('Logout error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        // Function to handle resume upload
+        function handleUpload() {
+            // Get the form elements
+            const form = document.getElementById('uploadForm');
+            const resumeName = form.elements.resumeName.value;
+            const resumeFile = form.elements.resumeFile.files[0];
+
+            // Create a FormData object and append the resume name and file
+            const formData = new FormData();
+            formData.append('resumeName', resumeName);
+            formData.append('resumeFile', resumeFile);
+
+            // Send a POST request to the server to upload the resume with name
+            fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.text())
+            .then(data => {
+                alert(data); // You can display a success message or handle errors here
+                form.reset(); // Reset the form
+
+                // Call listUserFiles after a successful upload to refresh the file list
+                listUserFiles();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error);
+            });
+        }
+
+        // Function to fetch and display user files
+        function listUserFiles() {
+            // Send a GET request to the server to list user files
+            fetch('/listFiles')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const files = data.files;
+                        const fileListContainer = document.getElementById('fileListContainer');
+                        fileListContainer.innerHTML = '';
+
+                        if (files.length === 0) {
+                            fileListContainer.innerHTML = '<p>No files uploaded yet.</p>';
+                        } else {
+                            const fileList = document.createElement('ul');
+                            fileList.classList.add('list-group');
+
+                            files.forEach(file => {
+                                const listItem = document.createElement('li');
+                                listItem.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-center');
+
+                                const fileName = document.createElement('span');
+                                fileName.textContent = 'Name: ' + file.name;
+
+                                const fileLink = document.createElement('a');
+                                fileLink.textContent = 'URL: ' + file.publicLink; // Use the publicLink
+                                fileLink.href = file.publicLink;
+                                fileLink.target = '_blank';
+                                fileLink.rel = 'noopener noreferrer';
+
+                                const deleteButton = document.createElement('button');
+                                deleteButton.textContent = 'Delete';
+                                deleteButton.classList.add('btn', 'btn-danger');
+                                
+                                listItem.appendChild(fileName);
+                                listItem.appendChild(fileLink);
+                                listItem.appendChild(deleteButton);
+
+                                // Add an event listener to the delete button
+                                deleteButton.addEventListener('click', () => {
+                                    // Call a function to handle the file deletion when the delete button is clicked
+                                    deleteFile(file.name);
+                                });
+
+                                fileList.appendChild(listItem);
+                            });
+
+                            fileListContainer.appendChild(fileList);
+                        }
+                    } else {
+                        // Handle errors or no user authenticated
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function deleteFile(fileName) {
+            fetch('/deleteFile', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ fileName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update the file list after successful deletion
+                    listUserFiles();
+                } else {
+                    // Handle deletion errors
+                    console.error('File deletion error:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+            listUserFiles();
+        }
+
+        // Call the function to list user files when the page loads
+        // listUserFiles();
+    </script>
+
+    <!-- Include Bootstrap JS and jQuery (optional) for enhanced functionality -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
