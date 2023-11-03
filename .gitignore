@@ -1,5 +1,6 @@
 # ENV file
 .env
+env-vars.yaml
 
 # GCP service account key file
 mukuntan20041.json
